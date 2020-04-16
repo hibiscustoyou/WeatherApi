@@ -5,7 +5,7 @@ Author  : zxt
 File    : app.py
 Software: PyCharm
 """
-
+import json
 
 import pymysql
 from flask import Flask, request, g
@@ -13,8 +13,11 @@ from WeatherCrawler.weather import Weather
 
 
 app = Flask(__name__)
+
+with open('config.json', 'r') as f:
+    db = json.load(f)["DB"]
 conn = pymysql.connect(
-    host='localhost', user='zxt', password='990127zxtXhh', database='national_divisions', charset='gb2312'
+    host=db['host'], user=db['user'], password=db['password'], database=db['database'], charset=db['charset']
 )
 cur = conn.cursor()
 
