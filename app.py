@@ -6,6 +6,7 @@ File    : app.py
 Software: PyCharm
 """
 import json
+import os
 
 import pymysql
 from flask import Flask, request, g
@@ -14,8 +15,10 @@ from WeatherCrawler.weather import Weather
 
 app = Flask(__name__)
 
-with open('config.json', 'r') as f:
-    db = json.load(f)["DB"]
+with open(os.path.abspath(os.path.join(os.path.abspath(__file__), "../config.json")), 'r') as f:
+    data = json.load(f)
+    db = data["DB"]
+    port = data["port"]
 conn = pymysql.connect(
     host=db['host'], user=db['user'], password=db['password'], database=db['database'], charset=db['charset']
 )
@@ -46,4 +49,4 @@ def get_weather():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5003)
+    app.run(host='0.0.0.0', port=port)

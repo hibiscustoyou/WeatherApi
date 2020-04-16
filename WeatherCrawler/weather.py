@@ -8,6 +8,7 @@ Software: PyCharm
 
 import json
 import re
+import os
 import time
 import requests
 import pymysql
@@ -37,7 +38,7 @@ class Weather:
         ts = int(time.time())
         today = int(time.strftime('%Y%m%d', time.localtime()))
 
-        with open('../config.json', 'r') as f:
+        with open(os.path.abspath(os.path.join(os.path.abspath(__file__), "../../config.json")), 'r') as f:
             db = json.load(f)["DB"]
 
         conn = pymysql.connect(
