@@ -79,9 +79,10 @@ class Weather:
         return code[0] if code else ''
 
     def __now(self, doc):
+        now_weather = doc('.cur')('i')
         now = {
-            'text': '',
-            'icon': '',
+            'text': now_weather.attr('title'),
+            'icon': f"http://i.tq121.com.cn/i/weather2014/png/blue_40/{now_weather.attr('class').split(' ')[-1]}.png",
             'temp': int(doc('.temp').text()),
             'relative_humidity': 0,
             'wind_class': '',
@@ -89,10 +90,6 @@ class Weather:
             'uptime': doc('.time span').text().replace('实况', ''),
             'request_time': time.strftime('%Y-%m-%d-%H:%M:%S', time.localtime())
         }
-
-        now_weather = doc('#weatherALL li').eq(6)('i')
-        now['icon'] = f"http://i.tq121.com.cn/i/weather2014/png/blue_40/{now_weather.attr('class').split(' ')[-1]}.png"
-        now['text'] = now_weather.attr('title')
 
         p = doc('.todayLeft p')
         now['wind_dir'], now['wind_class'] = p.eq(0)('span').text().split(' ')
@@ -201,7 +198,21 @@ class Weather:
 
         return forecasts
 
-    def get_weather(self, kw):
+    def __weather24h(self, doc):
+        hours = []
+        for li in doc('#weatherALL li').items():
+            hour = {
+                'time': li('.time').text(),
+                'text': li('i').attr('title'),
+                'icon': f"http://i.tq121.com.cn/i/weather2014/png/blue_40/{li('i').attr('class').split(' ')[-1]}.png",
+                'temp': int(doc('.temp').text()),
+                'wind_class': li('.windL').text(),
+                'wind_dir': li('.wind').text()
+            }
+            hours.append(hour)
+        return hours
+
+    def get_weather(self, kw, *, t='all'):
         kw = _replace(kw, ['市', '区', '县', '镇', '村'])
         try:
             weather_code = self.search(kw)
@@ -232,13 +243,16 @@ class Weather:
 
             weather_detail['result']['location'] = self.__location(kw)
             weather_detail['result']['now'] = self.__now(doc)
-
-            forecasts = self.__forecasts(
-                f'http://forecast.weather.com.cn/town/weathern/{weather_code}.shtml#input',
-                _headers
-            )
-
-            return weather_detail, forecasts
+            if t == 'now':
+                return weather_detail
+            elif t == 'all':
+                forecasts = self.__forecasts(
+                    f'http://forecast.weather.com.cn/town/weathern/{weather_code}.shtml#input',
+                    _headers
+                )
+                weather_detail['result']['forecasts'] = forecasts
+                weather_detail['result']['weather24h'] = self.__weather24h(doc)
+                return weather_detail
         except Exception as e:
             print(e)
             return {

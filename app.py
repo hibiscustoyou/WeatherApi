@@ -27,24 +27,19 @@ cur = conn.cursor()
 
 @app.route('/weather', methods=['get'])
 def get_weather():
-    district = request.args['district']
-    data_type = request.args['data_type']
+    district = request.args['district'].lower()
+    data_type = request.args['data_type'].lower()
     try:
         sql = f'select town from towns where code = {int(district)}'
         cur.execute(sql)
         district = cur.fetchone()[0]
     except:
         pass
-    weather, forecasts = Weather().get_weather(district)
+    weather = Weather().get_weather(district, t=data_type)
     print(weather)
     if not weather['status']:
-        if data_type == 'all':
-            weather.update({'forecasts': forecasts, 'msg': 'success'})
-            return weather
-
-        if data_type == 'now' or not data_type:
-            weather.update({'msg': 'success'})
-            return weather
+        weather.update({'msg': 'success'})
+        return weather
     return weather
 
 
